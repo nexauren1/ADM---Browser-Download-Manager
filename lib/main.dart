@@ -74,7 +74,7 @@ class _AdmHomeState extends State<AdmHome> {
     try {
       await native.invokeMethod<int>('enqueueDownload', {'url': draft.url, 'name': draft.name});
       if (!mounted) return;
-      setState(() { page = 0; refreshKey++; });
+      setState(() { page = 0; downloadFilter = 'all'; refreshKey++; });
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transferência adicionada à fila')));
     } on PlatformException catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
