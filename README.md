@@ -1,48 +1,33 @@
 # ADM - Browser & Download Manager
 
-ADM is an Android browser and download manager built with Flutter UI and a native Kotlin WebView host.
+ADM is an Android browser and download manager under the Nexauren identity.
 
-## Current foundation
-- Chromium-based rendering through Android System WebView.
-- Google Search as the default search provider.
-- Address/search bar, multiple browser tabs, back/forward/reload and home actions.
-- Download interception from WebView and enqueue through Android DownloadManager.
-- Transfer list with live status, byte counts, and progress where Android reports a total size.
-- Bookmarks and browsing history stored locally on the device.
-- Cyber-gaming dark interface, with Portuguese UI labels.
-- HTTPS-only network policy for app traffic; file/content access is disabled in WebView.
+## Interface
+Dedicated download-manager structure: queue, completed downloads, link editor, category-based settings and browser. The visual identity uses Nexauren dark surfaces, electric cyan and violet.
 
-## Generate the Android host project
+## Implemented foundation
+- Flutter interface with queue and completed tabs.
+- Add-download editor with URL validation, clipboard paste and optional filename.
+- Native Android DownloadManager integration for HTTP/HTTPS transfers.
+- Download state, byte counts and system-reported progress; completed files open through Android.
+- Wi-Fi-only preference for new downloads.
+- Browser hosted by Android System WebView (Chromium), Google Search, navigation controls and download interception.
+- Settings categories that identify features not yet available in the current engine.
+- GitHub Actions workflow to generate the Android host and build a release APK.
 
-The Android host sources are stored in android-template/. Run:
-
-    flutter pub get
-    bash tool/bootstrap_android.sh
-    flutter run
-
-The script uses the installed Flutter SDK to generate the matching Android Gradle wrapper and project files, then installs ADM's Kotlin host and Android manifest.
-
-## Build an APK
-
+## Build
     flutter pub get
     bash tool/bootstrap_android.sh
     flutter analyze
     flutter build apk --release
 
-The APK is generated at build/app/outputs/flutter-apk/app-release.apk.
+APK output: build/app/outputs/flutter-apk/app-release.apk
 
-A GitHub Actions workflow also builds the APK on pushes and manual dispatch, then uploads it as a workflow artifact.
-
-## Download behaviour
-
-The first implementation uses Android's system DownloadManager. It supports background transfer and system notifications, but Android DownloadManager does not expose universal pause/resume or segmented-download controls. Those advanced controls require a separate native transfer engine and server support for HTTP Range requests. ADM must not show pause/resume as available unless the server and transfer engine confirm support.
+## Download engine limits
+The initial version delegates transfers to Android DownloadManager. It supports background transfers and system notifications, but does not expose universal per-file pause/resume, segmented downloads, custom speed limits, BitTorrent or scheduling. These need a dedicated engine and, for resumable/segmented HTTP transfers, server support for HTTP Range requests. The interface labels these modules as not active rather than showing non-functional controls.
 
 ## Browser engine
+ADM hosts Android System WebView, which is based on Chromium. It is not the complete Google Chrome app. Google Search is configured as the default search provider.
 
-ADM does not bundle the proprietary Google Chrome app. It hosts Android System WebView, which is based on Chromium. Google Search is configured separately as the default search provider.
-
-## Minimum environment
-
-- Flutter stable channel with Android support.
-- Android SDK and Java toolchain required by the installed Flutter version.
-- Android device or emulator with Android System WebView installed and updated.
+## Android application ID
+com.nexauren.adm
