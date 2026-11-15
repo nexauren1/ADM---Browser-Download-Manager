@@ -225,7 +225,7 @@ private class AdmWebViewPlatformView(
                 publishState()
             }
         }
-        webView.setDownloadListener(DownloadListener { url, userAgent, contentDisposition, mimeType ->
+        webView.setDownloadListener(DownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
             onDownload(url, userAgent ?: "", contentDisposition ?: "", mimeType ?: "")
         })
         channel.setMethodCallHandler { call, result -> handleCall(call, result) }
