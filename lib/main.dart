@@ -61,11 +61,12 @@ class _AdmHomeState extends State<AdmHome> {
   bool searchMode = false;
   final search = TextEditingController();
   int refreshKey = 0;
+  String downloadFilter = 'all';
 
   @override
   void dispose() { search.dispose(); super.dispose(); }
 
-  void _page(int value) => setState(() { page = value; searchMode = false; search.clear(); });
+  void _page(int value) => setState(() { page = value; searchMode = false; search.clear(); downloadFilter = 'all'; });
 
   Future<void> _newDownload() async {
     final draft = await showDialog<_Draft>(context: context, builder: (_) => const AddDownloadDialog());
@@ -105,15 +106,16 @@ class _AdmHomeState extends State<AdmHome> {
               builder: (_) => const _InfoDialog(title: 'ADM Download Center',
                 message: 'As transferências são executadas pelo serviço DownloadManager do Android. O sistema mantém os ficheiros em segundo plano e emite notificações de estado.')),
               icon: const Icon(Icons.help_outline_rounded)),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.filter_alt_outlined, color: cyan),
-              onSelected: (_) => setState(() => refreshKey++),
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'all', child: Text('Todas')),
-                PopupMenuItem(value: 'active', child: Text('Em andamento')),
-                PopupMenuItem(value: 'failed', child: Text('Com falha')),
-              ],
-            ),
+            if (page == 0)
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.filter_alt_outlined, color: cyan),
+                onSelected: (value) => setState(() { downloadFilter = value; refreshKey++; }),
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'all', child: Text('Todas')),
+                  PopupMenuItem(value: 'active', child: Text('Em andamento')),
+                  PopupMenuItem(value: 'failed', child: Text('Com falha')),
+                ],
+              ),
           ],
         ],
       ),
@@ -122,7 +124,7 @@ class _AdmHomeState extends State<AdmHome> {
         _page(value);
       }),
       body: switch (page) {
-        0 => DownloadList(key: ValueKey('queue-' + refreshKey.toString()), completed: false, search: search.text),
+        0 => DownloadList(key: ValueKey('queue-' + refreshKey.toString()), completed: false, search: search.text, filter: downloadFilter),
         1 => DownloadList(key: ValueKey('done-' + refreshKey.toString()), completed: true, search: search.text),
         2 => BrowserScreen(onDownloads: () => _page(0)),
         _ => const SettingsHome(),
@@ -280,9 +282,10 @@ String _size(int bytes) {
 }
 
 class DownloadList extends StatefulWidget {
-  const DownloadList({super.key, required this.completed, required this.search});
+  const DownloadList({super.key, required this.completed, required this.search, this.filter = 'all'});
   final bool completed;
   final String search;
+  final String filter;
   @override
   State<DownloadList> createState() => _DownloadListState();
 }
@@ -301,7 +304,15 @@ class _DownloadListState extends State<DownloadList> {
       if (!mounted) return;
       final all = raw.map((row) => _Download.map(Map<dynamic, dynamic>.from(row as Map))).toList();
       setState(() {
-        downloads = all.where((d) => widget.completed ? d.complete : !d.complete).toList();
+        downloads = all.where((d) {
+          if (widget.completed) return d.complete;
+          if (d.complete) return false;
+          switch (widget.filter) {
+            case 'active': return d.status == 1 || d.status == 2 || d.status == 4;
+            case 'failed': return d.status == 16;
+            default: return true;
+          }
+        }).toList();
         loading = false; error = null;
       });
     } on PlatformException catch (e) {
